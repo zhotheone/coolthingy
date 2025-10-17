@@ -2,11 +2,12 @@ services:
   audio-streamer-api:
     build: .
     container_name: audio-streamer-api
+    user: "${UID:-1000}:${GID:-1000}"
     ports:
       - "127.0.0.1:4000:4000"
     volumes:
       - music_cache:/app/music
-      - ./cookies.txt:/app/cookies.txt:ro
+      - ./cookies.txt:/app/cookies.txt
     env_file:
       - .env
     restart: unless-stopped
