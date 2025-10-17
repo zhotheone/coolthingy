@@ -17,13 +17,12 @@ WORKDIR /app
 COPY requirements.txt .
 
 # Install Python packages system-wide as root.
-# This places 'gunicorn' in /usr/local/bin/, a standard system location.
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Create the non-root user and the music directory
 RUN useradd -m appuser && mkdir -p /app/music
 
-# Copy the application code
+# [--- FILENAME CHANGE ---]: Copy main.py instead of app.py
 COPY main.py .
 
 # Change ownership of the entire app directory to the non-root user.
@@ -36,6 +35,7 @@ USER appuser
 EXPOSE 4000
 
 # --- Run Command ---
-# [--- THE DEFINITIVE FIX ---]: Use the absolute path to the gunicorn executable.
-# This bypasses any PATH issues and tells the container exactly where to find the program.
-CMD ["/usr/local/bin/gunicorn", "--bind", "0.0.0.0:4000", "--workers", "3", "app:app"]
+# [--- THE DEFINITIVE FIX ---]: Execute gunicorn as a Python module.
+# This is independent of the system's PATH and is the most reliable method.
+# Note that we also point it to 'main:app' as requested.
+CMD ["python", "-m", "gunicorn", "--bind", "0.0.0.0:4000", "--workers", "3", "main:app"]
