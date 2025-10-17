@@ -1,0 +1,14 @@
+services:
+  audio-streamer-api:
+    build: .
+    container_name: audio-streamer-api
+    ports:
+      - "4000:4000"
+    volumes:
+      - music_cache:/app/music
+    env_file:
+      - .env
+    restart: unless-stopped
+
+volumes:
+  music_cache:
