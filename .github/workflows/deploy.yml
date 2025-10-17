@@ -27,9 +27,6 @@ jobs:
       - name: Build and Run Containers
         run: docker compose up --build -d
 
-      - name: Wait for API to be ready
-        run: sleep 15
-
       - name: Setup Python for testing
         uses: actions/setup-python@v4
         with:
