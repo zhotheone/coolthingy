@@ -10,7 +10,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 RUN useradd -m appuser
 USER appuser
-COPY app.py .
+COPY main.py .
 
 RUN mkdir -p /app/music
 
