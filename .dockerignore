@@ -9,4 +9,3 @@ music/
 build/
 dist/
 *.egg-info/
-cookies.txt
