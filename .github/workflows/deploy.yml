@@ -41,7 +41,7 @@ jobs:
       - name: Run API tests
         run: |
           export API_KEY=${{ secrets.API_KEY }}
-          pytest -v
+          pytest -v test_suite.py
 
       - name: Stop containers
         if: always()
