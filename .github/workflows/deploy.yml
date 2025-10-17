@@ -25,7 +25,7 @@ jobs:
           echo "SPOTIFY_REFRESH_TOKEN=${{ secrets.SPOTIFY_REFRESH_TOKEN }}" >> .env
       
       - name: Build and Run Containers
-        run: docker-compose up --build -d
+        run: docker compose up --build -d
 
       - name: Wait for API to be ready
         run: sleep 15
@@ -45,7 +45,7 @@ jobs:
 
       - name: Stop containers
         if: always()
-        run: docker-compose down
+        run: docker compose down
         
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
