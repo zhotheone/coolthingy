@@ -185,7 +185,7 @@ def download_and_cache_track(search_query, song_name, artist):
         ydl_opts = {
             'format': 'bestaudio/best',
             'postprocessors': [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'opus', 'preferredquality': '96'}],
-            'outtmpl': temp_output_path, 'quiet': True, 'nocheckcertificate': True
+            'outtmpl': temp_output_path, 'quiet': True, 'nocheckcertificate': True, 'cookiefile': '/app/cookies.txt'
         }
         
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:

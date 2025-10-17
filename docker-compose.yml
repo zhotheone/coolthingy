@@ -6,6 +6,7 @@ services:
       - "127.0.0.1:4000:4000"
     volumes:
       - music_cache:/app/music
+      - ./cookies.txt:/app/cookies.txt:ro
     env_file:
       - .env
     restart: unless-stopped
