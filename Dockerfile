@@ -13,21 +13,29 @@ RUN apt-get update \
 # --- Application Setup ---
 WORKDIR /app
 
-# Copy requirements file
+# Copy requirements file first for layer caching
 COPY requirements.txt .
 
-# Install Python packages (as root)
+# Install Python packages system-wide as root.
+# This places 'gunicorn' in /usr/local/bin/, a standard system location.
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the application code
-COPY main.py .
+# Create the non-root user and the music directory
+RUN useradd -m appuser && mkdir -p /app/music
 
-# Create the music directory
-RUN mkdir -p /app/music
+# Copy the application code
+COPY app.py .
+
+# Change ownership of the entire app directory to the non-root user.
+RUN chown -R appuser:appuser /app
+
+# Switch to the non-root user to run the application securely.
+USER appuser
 
 # --- Port Exposure ---
 EXPOSE 4000
 
 # --- Run Command ---
-# Everything runs as the default root user.
-CMD ["gunicorn", "--bind", "0.0.0.0:4000", "--workers", "3", "app:app"]
+# [--- THE DEFINITIVE FIX ---]: Use the absolute path to the gunicorn executable.
+# This bypasses any PATH issues and tells the container exactly where to find the program.
+CMD ["/usr/local/bin/gunicorn", "--bind", "0.0.0.0:4000", "--workers", "3", "app:app"]
