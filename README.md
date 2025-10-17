@@ -52,7 +52,3 @@ docker run --rm -p 4000:4000 --env-file .env -v "$(pwd)/music":/app/music --name
 - The compose healthcheck calls `/api/tracks` using `X-API-Key` from `.env`. Make sure `API_KEY` is set in `.env`.
 - For production, prefer secrets management instead of committing `.env` to source control.
 - Adjust Gunicorn worker count in the `Dockerfile` CMD or docker-compose `command` override depending on your CPU/RAM.
-
-If you want, I can:
-- Add a simple `health` endpoint that doesn't require an API key (so Docker healthchecks don't need the key), or
-- Add a Compose file variant that includes a local Postgres (for local dev) and wiring. 
