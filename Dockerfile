@@ -24,7 +24,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN useradd -m appuser && mkdir -p /app/music
 
 # Copy the application code
-COPY app.py .
+COPY main.py .
 
 # Change ownership of the entire app directory to the non-root user.
 RUN chown -R appuser:appuser /app
