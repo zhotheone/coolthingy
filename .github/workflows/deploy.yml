@@ -1,0 +1,96 @@
+name: CI/CD Pipeline for Audio Streamer API
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  # --- Job 1: Build, Test, and Push Image ---
+  build-and-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create .env file for testing
+        run: |
+          echo "NEON_CONNECTION_STRING=${{ secrets.NEON_CONNECTION_STRING }}" >> .env
+          echo "API_KEY=${{ secrets.API_KEY }}" >> .env
+          echo "SPOTIFY_CLIENT_ID=${{ secrets.SPOTIFY_CLIENT_ID }}" >> .env
+          echo "SPOTIFY_CLIENT_SECRET=${{ secrets.SPOTIFY_CLIENT_SECRET }}" >> .env
+          echo "SPOTIFY_REFRESH_TOKEN=${{ secrets.SPOTIFY_REFRESH_TOKEN }}" >> .env
+      
+      - name: Build and Run Containers
+        run: docker-compose up --build -d
+
+      - name: Wait for API to be ready
+        run: sleep 15
+
+      - name: Setup Python for testing
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install test dependencies
+        run: pip install pytest requests
+      
+      - name: Run API tests
+        run: |
+          export API_KEY=${{ secrets.API_KEY }}
+          pytest -v
+
+      - name: Stop containers
+        if: always()
+        run: docker-compose down
+        
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/audio-streamer-api:latest
+            ghcr.io/${{ github.repository_owner }}/audio-streamer-api:${{ github.sha }}
+
+  # --- Job 2: Deploy to Production Server ---
+  deploy:
+    # This job will only run if 'build-and-test' job completes successfully
+    needs: build-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Navigate to the project directory
+            cd ${{ secrets.PROJECT_PATH }}
+            
+            # Get the latest code (e.g., updates to docker-compose.yml)
+            git pull
+            
+            # Log in to GitHub Container Registry to pull the new private image
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+            
+            # Pull the latest version of the image
+            docker-compose pull
+            
+            # Stop the current running version and start the new one
+            docker-compose up -d
+            
+            # Clean up old, unused Docker images to save space
+            docker image prune -af
